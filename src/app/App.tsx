@@ -7,6 +7,7 @@ import { ErrorBoundary } from "./components/ErrorBoundary";
 import { CookieConsent } from "./components/CookieConsent";
 import { BackToTop } from "./components/BackToTop";
 import { NewsletterPopup } from "./components/NewsletterPopup";
+import { FlyerPopup } from "./components/FlyerPopup";
 import { SiteSettingsProvider } from "./context/SiteSettingsContext";
 
 export default function App() {
@@ -26,6 +27,7 @@ export default function App() {
             <CookieConsent />
             <BackToTop />
             <NewsletterPopup />
+            <FlyerPopup />
             <Toaster position="bottom-right" richColors closeButton />
           </SiteSettingsProvider>
         </WishlistProvider>

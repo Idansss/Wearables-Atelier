@@ -24,6 +24,7 @@ import {
   Paintbrush,
   Briefcase,
   Star,
+  Megaphone,
 } from "lucide-react";
 
 type NavItem = {
@@ -69,6 +70,7 @@ const navSections: { title: string; items: NavItem[] }[] = [
   {
     title: "Site",
     items: [
+      { label: "Flyers", to: "/admin/flyers", icon: Megaphone },
       { label: "Content", to: "/admin/content", icon: FileEdit },
       { label: "Settings", to: "/admin/settings", icon: Settings },
       { label: "Admin Users", to: "/admin/users", icon: Shield, minRole: "owner" },
@@ -107,6 +109,7 @@ function pageTitleFromPath(pathname: string): string {
     "/admin/custom-orders": "Custom Orders",
     "/admin/wholesale": "Wholesale Leads",
     "/admin/reviews": "Reviews",
+    "/admin/flyers": "Popup Flyers",
   };
   if (pathname.startsWith("/admin/orders/")) return "Order Detail";
   return map[pathname] ?? "Admin";

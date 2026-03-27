@@ -36,6 +36,7 @@ const AdminAuditLog = lazy(() => import("./pages/admin/AuditLog"));
 const AdminCustomOrders = lazy(() => import("./pages/admin/CustomOrders"));
 const AdminWholesaleLeads = lazy(() => import("./pages/admin/WholesaleLeads"));
 const AdminReviews = lazy(() => import("./pages/admin/Reviews"));
+const AdminFlyers = lazy(() => import("./pages/admin/Flyers"));
 
 function AdminRedirect() {
   return <Navigate to="/admin/dashboard" replace />;
@@ -125,6 +126,7 @@ export const router = createBrowserRouter([
       { path: "custom-orders", Component: AdminCustomOrders },
       { path: "wholesale", Component: AdminWholesaleLeads },
       { path: "reviews", Component: AdminReviews },
+      { path: "flyers", Component: AdminFlyers },
     ],
   },
   { path: "*", Component: wrap(NotFound) },

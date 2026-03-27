@@ -916,3 +916,85 @@ export async function saveProductReview(review: {
   });
   if (error) throw error;
 }
+
+// ─── Flyers ───────────────────────────────────────────────────────────────────
+
+export type Flyer = {
+  id: string;
+  imageUrl: string;
+  title: string;
+  isActive: boolean;
+  delaySeconds: number;
+  createdAt: Date;
+};
+
+function rowToFlyer(row: Record<string, unknown>): Flyer {
+  return {
+    id: String(row.id),
+    imageUrl: String(row.image_url),
+    title: String(row.title ?? ""),
+    isActive: Boolean(row.is_active),
+    delaySeconds: Number(row.delay_seconds ?? 5),
+    createdAt: parseDate(row.created_at as string),
+  };
+}
+
+export async function getFlyers(): Promise<Flyer[]> {
+  const { data, error } = await supabase
+    .from("flyers")
+    .select("*")
+    .order("created_at", { ascending: false });
+  if (error) throw error;
+  return (data ?? []).map((r) => rowToFlyer(r as Record<string, unknown>));
+}
+
+export async function getActiveFlyer(): Promise<Flyer | null> {
+  const { data, error } = await supabase
+    .from("flyers")
+    .select("*")
+    .eq("is_active", true)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (error) throw error;
+  if (!data) return null;
+  return rowToFlyer(data as Record<string, unknown>);
+}
+
+export async function saveFlyer(input: {
+  imageUrl: string;
+  title: string;
+  delaySeconds: number;
+}): Promise<string> {
+  const { data, error } = await supabase
+    .from("flyers")
+    .insert({
+      image_url: input.imageUrl,
+      title: input.title.trim(),
+      delay_seconds: input.delaySeconds,
+      is_active: false,
+      created_at: new Date().toISOString(),
+    })
+    .select("id")
+    .single();
+  if (error) throw error;
+  return String((data as Record<string, unknown>).id);
+}
+
+export async function setFlyerActive(id: string, isActive: boolean): Promise<void> {
+  if (isActive) {
+    // Deactivate all others first
+    const { error: deactivateErr } = await supabase
+      .from("flyers")
+      .update({ is_active: false })
+      .neq("id", id);
+    if (deactivateErr) throw deactivateErr;
+  }
+  const { error } = await supabase.from("flyers").update({ is_active: isActive }).eq("id", id);
+  if (error) throw error;
+}
+
+export async function deleteFlyer(id: string): Promise<void> {
+  const { error } = await supabase.from("flyers").delete().eq("id", id);
+  if (error) throw error;
+}
