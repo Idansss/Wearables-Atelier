@@ -308,9 +308,11 @@ export function Navbar() {
 
       {/* Mobile drawer */}
       <div
-        className="lg:hidden overflow-hidden transition-all duration-500"
+        className="lg:hidden transition-all duration-500"
         style={{
-          maxHeight: mobileOpen ? "600px" : "0",
+          maxHeight: mobileOpen ? "calc(100dvh - 80px)" : "0",
+          overflowY: mobileOpen ? "auto" : "hidden",
+          overflowX: "hidden",
           backgroundColor: "rgba(13,13,13,0.97)",
           backdropFilter: "blur(24px)",
           WebkitBackdropFilter: "blur(24px)",
