@@ -1,26 +1,153 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+@layer base {
+  :root {
+    --background: #F8F5F0;
+    --foreground: #0D0D0D;
+  }
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-gold: #C9A84C;
+  --color-gold-light: #E8C96A;
+  --color-gold-dark: #A07830;
+  --color-cream: #F8F5F0;
+  --color-sand: #EDE8DF;
+  --color-charcoal: #0D0D0D;
+  --color-muted: #6B6560;
+  --font-display: var(--font-cormorant);
+  --font-sans: var(--font-dm-sans);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@layer base {
+  * {
+    border-color: rgb(13 13 13 / 0.12);
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background: radial-gradient(circle at top, #fbf8f3 0%, #f8f5f0 45%, #f4efe7 100%);
+    color: var(--foreground);
+    font-family: var(--font-dm-sans), system-ui, sans-serif;
+    font-weight: 500;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+    letter-spacing: 0.01em;
+  }
+
+  h1, h2, h3, h4 {
+    font-family: var(--font-cormorant), serif;
+    font-weight: 500;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@layer components {
+  .editorial-container {
+    @apply max-w-[1440px] mx-auto px-4 sm:px-8 lg:px-12;
+  }
+
+  .section-shell {
+    @apply py-20 lg:py-28;
+  }
+
+  .section-kicker {
+    @apply text-[10px] tracking-[0.42em] uppercase text-gold font-semibold;
+  }
+
+  .section-title {
+    @apply font-display text-5xl lg:text-6xl font-normal italic leading-[0.95];
+  }
+
+  .luxury-panel {
+    @apply border border-charcoal/10 bg-white/70 backdrop-blur-sm shadow-[0_14px_40px_rgba(0,0,0,0.06)];
+  }
+
+  .luxury-btn {
+    @apply inline-flex items-center justify-center gap-2 bg-charcoal text-cream px-8 py-4 text-[11px] tracking-[0.24em] uppercase font-semibold transition-all duration-300 hover:bg-gold hover:text-charcoal;
+  }
+
+  .luxury-btn-outline {
+    @apply inline-flex items-center justify-center gap-2 border border-charcoal/20 text-charcoal px-8 py-4 text-[11px] tracking-[0.24em] uppercase font-semibold transition-all duration-300 hover:border-gold hover:text-gold;
+  }
+
+  .luxury-input {
+    @apply w-full border border-charcoal/15 bg-white/50 px-4 py-3.5 text-sm text-charcoal placeholder-charcoal/30 focus:outline-none focus:border-gold transition-colors;
+  }
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: #0D0D0D; }
+::-webkit-scrollbar-thumb { background: #C9A84C; }
+::selection { background: #C9A84C; color: #0D0D0D; }
+
+/* Marquee animation */
+@keyframes marquee {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+.marquee-track {
+  animation: marquee 30s linear infinite;
+  display: flex;
+  width: max-content;
+}
+.marquee-track:hover {
+  animation-play-state: paused;
+}
+
+/* Clip text */
+.text-clip {
+  background: linear-gradient(135deg, #C9A84C 0%, #F0D080 50%, #C9A84C 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Hover line */
+.link-line {
+  position: relative;
+}
+.link-line::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  width: 0;
+  height: 1px;
+  background: #C9A84C;
+  transition: width 0.35s cubic-bezier(0.4,0,0.2,1);
+}
+.link-line:hover::after { width: 100%; }
+
+/* Image zoom */
+.img-zoom img {
+  transition: transform 0.8s cubic-bezier(0.4,0,0.2,1);
+}
+.img-zoom:hover img { transform: scale(1.06); }
+
+/* Hero headline tracking */
+.hero-headline {
+  letter-spacing: -0.02em;
+}
+
+/* Fade up */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.fade-up {
+  animation: fadeUp 0.8s cubic-bezier(0.4,0,0.2,1) forwards;
+}
+
+.scrollbar-none {
+  scrollbar-width: none;
+}
+
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
 }
