@@ -260,7 +260,7 @@ export function Navbar() {
       {/* Full-width search overlay */}
       {searchOpen && (
         <div
-          className="absolute top-0 left-0 right-0 flex items-center px-6 lg:px-10 h-20 lg:h-24"
+          className="absolute top-0 left-0 right-0 z-20 flex items-center px-6 lg:px-10 h-20 lg:h-24"
           style={{ backgroundColor: "rgba(13,13,13,0.97)", backdropFilter: "blur(24px)", WebkitBackdropFilter: "blur(24px)" }}
         >
           <form
