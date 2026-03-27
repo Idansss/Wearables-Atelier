@@ -1,12 +1,39 @@
 import { Link } from "react-router";
 import { ArrowUpRight } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useSiteSettings } from "../context/SiteSettingsContext";
 
-const HERO_IMAGE = "/images/collection/look-01.png";
+const SLIDES = [
+  {
+    image: "/images/collection/look-01.png",
+    label: "Ashabi Collection",
+    name: "Embellished Lace Boubou",
+    price: "₦120,000",
+    link: "/shop/ashabi",
+  },
+  {
+    image: "/images/collection/look-02.png",
+    label: "Ready to Wear",
+    name: "Iro & Buba Set — Jade",
+    price: "₦85,000",
+    link: "/shop/ready-to-wear",
+  },
+  {
+    image: "/images/collection/look-03.png",
+    label: "New In",
+    name: "Aso Oke Kaftan",
+    price: "₦95,000",
+    link: "/shop/new-in",
+  },
+];
+
+const SLIDE_INTERVAL = 5000;
 
 export function Hero() {
   const [loaded, setLoaded] = useState(false);
+  const [slide, setSlide] = useState(0);
+  const [fading, setFading] = useState(false);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { settings } = useSiteSettings();
   const s = settings.storefront;
 
@@ -16,10 +43,26 @@ export function Hero() {
     { value: s.heroStat3Value, label: s.heroStat3Label },
   ];
 
+  function goToSlide(index: number) {
+    if (index === slide) return;
+    setFading(true);
+    setTimeout(() => {
+      setSlide(index);
+      setFading(false);
+    }, 400);
+  }
+
   useEffect(() => {
     const t = setTimeout(() => setLoaded(true), 100);
     return () => clearTimeout(t);
   }, []);
+
+  useEffect(() => {
+    timerRef.current = setTimeout(() => {
+      goToSlide((slide + 1) % SLIDES.length);
+    }, SLIDE_INTERVAL);
+    return () => { if (timerRef.current) clearTimeout(timerRef.current); };
+  }, [slide]);
 
   return (
     <section className="relative w-full min-h-screen flex overflow-hidden" style={{ backgroundColor: "#0D0D0D" }}>
@@ -173,23 +216,34 @@ export function Hero() {
         </div>
       </div>
 
-      {/* Right Panel — editorial image */}
-      <div className="hidden lg:block relative flex-1">
+      {/* Right Panel — slideshow */}
+      <div className="hidden lg:block relative flex-1 overflow-hidden">
+        {/* Left fade */}
         <div
           className="absolute inset-y-0 left-0 w-32 z-10 pointer-events-none"
           style={{ background: "linear-gradient(to right, #0D0D0D, transparent)" }}
         />
-        <img
-          src={HERO_IMAGE}
-          alt="Wearables Atelier editorial"
-          className="w-full h-full object-cover object-center"
-          fetchPriority="high"
-        />
+
+        {/* Slides */}
+        {SLIDES.map((s, i) => (
+          <img
+            key={s.image}
+            src={s.image}
+            alt={s.name}
+            fetchPriority={i === 0 ? "high" : "auto"}
+            className="absolute inset-0 w-full h-full object-cover object-center transition-opacity duration-500"
+            style={{ opacity: i === slide ? (fading ? 0 : 1) : 0 }}
+          />
+        ))}
 
         {/* Floating trending card */}
         <div
-          className="absolute bottom-10 right-8 z-20 p-5 min-w-[180px]"
-          style={{ backgroundColor: "#0D0D0D", border: "1px solid rgba(201,168,76,0.3)" }}
+          className="absolute bottom-10 right-8 z-20 p-5 min-w-[180px] transition-opacity duration-400"
+          style={{
+            backgroundColor: "#0D0D0D",
+            border: "1px solid rgba(201,168,76,0.3)",
+            opacity: fading ? 0 : 1,
+          }}
         >
           <p
             className="text-[10px] tracking-[0.2em] mb-2"
@@ -201,24 +255,55 @@ export function Hero() {
             className="text-sm mb-1"
             style={{ fontFamily: "'Cormorant Garamond', serif", fontStyle: "italic", color: "#F8F5F0" }}
           >
-            {s.heroTrendingName}
+            {SLIDES[slide].name}
           </p>
           <p
             style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 600, fontSize: "13px", color: "#C9A84C" }}
           >
-            {s.heroTrendingPrice}
+            {SLIDES[slide].price}
           </p>
+          <Link
+            to={SLIDES[slide].link}
+            className="mt-3 flex items-center gap-1 text-[10px] tracking-[0.15em] uppercase transition-opacity hover:opacity-70"
+            style={{ fontFamily: "'DM Sans', sans-serif", color: "rgba(248,245,240,0.5)" }}
+          >
+            View <ArrowUpRight size={10} />
+          </Link>
+        </div>
+
+        {/* Slide dots */}
+        <div className="absolute bottom-10 left-1/2 -translate-x-1/2 z-20 flex gap-2">
+          {SLIDES.map((_, i) => (
+            <button
+              key={i}
+              type="button"
+              onClick={() => goToSlide(i)}
+              aria-label={`Go to slide ${i + 1}`}
+              className="transition-all duration-300"
+              style={{
+                width: i === slide ? "24px" : "8px",
+                height: "8px",
+                borderRadius: "4px",
+                backgroundColor: i === slide ? "#C9A84C" : "rgba(201,168,76,0.35)",
+                border: "none",
+                cursor: "pointer",
+              }}
+            />
+          ))}
         </div>
       </div>
 
-      {/* Mobile hero image strip */}
+      {/* Mobile hero image strip — also slides */}
       <div className="lg:hidden absolute inset-0 -z-0">
-        <img
-          src={HERO_IMAGE}
-          alt="Wearables Atelier editorial"
-          className="w-full h-full object-cover object-top opacity-20"
-          fetchPriority="high"
-        />
+        {SLIDES.map((s, i) => (
+          <img
+            key={s.image}
+            src={s.image}
+            alt={s.name}
+            className="absolute inset-0 w-full h-full object-cover object-top transition-opacity duration-500"
+            style={{ opacity: i === slide ? (fading ? 0 : 0.2) : 0 }}
+          />
+        ))}
         <div
           className="absolute inset-0"
           style={{ background: "linear-gradient(to bottom, #0D0D0D 40%, rgba(13,13,13,0.85))" }}
