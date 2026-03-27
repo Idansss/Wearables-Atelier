@@ -68,7 +68,7 @@ function CategoryTile({ cat }: { cat: HomeCollection }) {
             fontFamily: cat.large ? "'Cormorant Garamond', serif" : "'DM Sans', sans-serif",
             fontStyle: cat.large ? "italic" : "normal",
             fontWeight: cat.large ? 300 : 500,
-            fontSize: cat.large ? "clamp(32px, 4vw, 52px)" : "13px",
+            fontSize: cat.large ? "clamp(24px, 5vw, 52px)" : "clamp(11px, 2.8vw, 13px)",
             letterSpacing: cat.large ? "-0.01em" : "0.15em",
             textTransform: cat.large ? "none" : "uppercase",
             color: "#F8F5F0",
@@ -151,7 +151,7 @@ export function CategoryGrid() {
         </div>
 
         {/* Bento Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 auto-rows-[200px]">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-3 auto-rows-[clamp(140px,30vw,200px)]">
           {categories.map((cat) => <CategoryTile key={cat.id} cat={cat} />)}
         </div>
       </div>

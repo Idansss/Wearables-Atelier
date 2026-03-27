@@ -51,11 +51,11 @@ export function AnnouncementBar() {
 
   return (
     <div
-      className="relative flex items-center justify-center px-10 py-2.5 text-center"
+      className="relative flex items-center justify-center px-8 pr-10 py-2.5 text-center"
       style={{ backgroundColor: "#0D0D0D" }}
     >
       <p
-        className="text-xs tracking-widest uppercase transition-opacity duration-400"
+        className="text-[10px] sm:text-xs tracking-[0.08em] sm:tracking-widest uppercase truncate max-w-[90%] transition-opacity duration-400"
         style={{ fontFamily: "'DM Sans', sans-serif", color: "#C9A84C", opacity: fade ? 1 : 0 }}
       >
         {messages[current]}

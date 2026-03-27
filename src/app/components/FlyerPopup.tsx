@@ -41,7 +41,7 @@ export function FlyerPopup() {
           type="button"
           aria-label="Close"
           onClick={dismiss}
-          className="absolute -top-3 -right-3 z-10 w-8 h-8 flex items-center justify-center rounded-full shadow-lg transition-opacity hover:opacity-80"
+          className="absolute top-2 right-2 sm:-top-3 sm:-right-3 z-10 w-8 h-8 flex items-center justify-center rounded-full shadow-lg transition-opacity hover:opacity-80"
           style={{ backgroundColor: "#0D0D0D", color: "#F8F5F0" }}
         >
           <X size={16} />

@@ -27,7 +27,7 @@ export function CookieConsent() {
 
   return (
     <div
-      className="fixed bottom-0 left-0 right-0 z-[200] px-6 py-5 flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-8 shadow-2xl"
+      className="fixed bottom-0 left-0 right-0 z-[200] px-6 pt-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-8 shadow-2xl"
       style={{ backgroundColor: "#0D0D0D", borderTop: "1px solid rgba(201,168,76,0.25)" }}
       role="dialog"
       aria-label="Cookie consent"

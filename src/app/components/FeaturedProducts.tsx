@@ -72,7 +72,7 @@ function ProductCard({ product }: { product: (typeof products)[number] }) {
   return (
     <div
       className="flex-shrink-0 cursor-pointer group"
-      style={{ width: "280px" }}
+      style={{ width: "clamp(220px, 68vw, 280px)" }}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
@@ -258,7 +258,7 @@ export function FeaturedProducts() {
         {/* Horizontal scroll */}
         <div
           ref={scrollRef}
-          className="flex gap-6 overflow-x-auto px-6 lg:px-10 pb-6 scroll-smooth"
+          className="flex gap-4 sm:gap-6 overflow-x-auto px-6 lg:px-10 pb-6 scroll-smooth"
           style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
         >
           {products.map((p) => (
@@ -270,7 +270,7 @@ export function FeaturedProducts() {
             to="/shop"
             className="flex-shrink-0 flex flex-col items-center justify-center border transition-colors hover:border-[#C9A84C] group"
             style={{
-              width: "280px",
+              width: "clamp(220px, 68vw, 280px)",
               aspectRatio: "3/4",
               borderColor: "rgba(248,245,240,0.15)",
             }}

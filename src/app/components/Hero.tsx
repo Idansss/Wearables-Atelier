@@ -68,7 +68,7 @@ export function Hero() {
     <section className="relative w-full min-h-screen flex overflow-hidden" style={{ backgroundColor: "#0D0D0D" }}>
       {/* Left Panel */}
       <div
-        className="relative z-10 flex flex-col justify-center px-8 md:px-12 lg:px-16 xl:px-20 pt-28 pb-10 w-full lg:w-1/2"
+        className="relative z-10 flex flex-col justify-center px-6 sm:px-8 md:px-12 lg:px-16 xl:px-20 pt-24 sm:pt-28 pb-10 w-full lg:w-1/2"
         style={{ backgroundColor: "#0D0D0D" }}
       >
         {/* Location tag */}
@@ -97,7 +97,7 @@ export function Hero() {
               fontFamily: "'Cormorant Garamond', serif",
               fontStyle: "italic",
               fontWeight: 300,
-              fontSize: "clamp(72px, 9vw, 132px)",
+              fontSize: "clamp(36px, 12vw, 132px)",
               lineHeight: 0.9,
               color: "#F8F5F0",
               opacity: loaded ? 1 : 0,
@@ -119,8 +119,8 @@ export function Hero() {
               style={{
                 fontFamily: "'DM Sans', sans-serif",
                 fontWeight: 600,
-                fontSize: "clamp(14px, 1.5vw, 20px)",
-                letterSpacing: "0.35em",
+                fontSize: "clamp(11px, 3vw, 20px)",
+                letterSpacing: "0.28em",
                 color: "#C9A84C",
                 textTransform: "uppercase",
               }}
@@ -162,7 +162,7 @@ export function Hero() {
 
         {/* CTA Buttons */}
         <div
-          className="flex flex-wrap gap-4 mb-12 transition-all duration-700"
+          className="flex flex-wrap gap-3 mb-10 sm:mb-12 transition-all duration-700"
           style={{
             opacity: loaded ? 1 : 0,
             transform: loaded ? "translateY(0)" : "translateY(20px)",
@@ -171,14 +171,14 @@ export function Hero() {
         >
           <Link
             to="/shop"
-            className="px-8 py-4 text-xs tracking-[0.2em] uppercase transition-all duration-300 hover:opacity-90"
+            className="flex-1 sm:flex-none flex items-center justify-center px-8 py-4 text-xs tracking-[0.2em] uppercase transition-all duration-300 hover:opacity-90 min-w-[140px]"
             style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 600, backgroundColor: "#C9A84C", color: "#0D0D0D" }}
           >
             SHOP NOW
           </Link>
           <Link
             to="/shop/ashabi"
-            className="flex items-center gap-2 px-8 py-4 text-xs tracking-[0.2em] uppercase border transition-all duration-300 hover:border-[#C9A84C] hover:text-[#C9A84C]"
+            className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-8 py-4 text-xs tracking-[0.2em] uppercase border transition-all duration-300 hover:border-[#C9A84C] hover:text-[#C9A84C] min-w-[140px]"
             style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 600, borderColor: "rgba(248,245,240,0.4)", color: "#F8F5F0" }}
           >
             ASHABI COLLECTION
@@ -188,7 +188,7 @@ export function Hero() {
 
         {/* Stats Row */}
         <div
-          className="flex gap-8 transition-all duration-700"
+          className="flex flex-wrap gap-x-6 gap-y-4 sm:gap-x-8 transition-all duration-700"
           style={{ opacity: loaded ? 1 : 0, transitionDelay: "0.85s" }}
         >
           {stats.map((stat, i) => (

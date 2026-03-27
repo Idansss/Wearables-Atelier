@@ -91,7 +91,7 @@ export function NewsletterPopup() {
           </div>
 
           {/* Content */}
-          <div className="flex-1 p-8 sm:p-10">
+          <div className="flex-1 p-6 sm:p-10">
             <p
               className="text-xs tracking-[0.3em] uppercase mb-3"
               style={{ fontFamily: "'DM Sans', sans-serif", color: "#C9A84C" }}

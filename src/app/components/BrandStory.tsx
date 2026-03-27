@@ -44,7 +44,7 @@ export function BrandStory() {
       {/* Background editorial image with overlay */}
       <div className="relative max-w-[1440px] mx-auto px-6 lg:px-10">
         {/* Top editorial image */}
-        <div className="relative mb-16 overflow-hidden" style={{ height: "420px" }}>
+        <div className="relative mb-10 sm:mb-16 overflow-hidden" style={{ height: "clamp(220px, 55vw, 420px)" }}>
           <img
             src="/images/collection/look-10.png"
             alt="Ashabi editorial"

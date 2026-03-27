@@ -41,7 +41,7 @@ export function PromoBanner() {
             fontFamily: "'Cormorant Garamond', serif",
             fontStyle: "italic",
             fontWeight: 600,
-            fontSize: "clamp(48px, 6vw, 80px)",
+            fontSize: "clamp(36px, 9vw, 80px)",
             color: "#0D0D0D",
             lineHeight: 1,
           }}

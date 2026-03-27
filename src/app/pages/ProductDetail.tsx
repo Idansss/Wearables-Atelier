@@ -315,7 +315,7 @@ function ReviewsSection({ slug }: { slug: string }) {
       {reviews.length > 0 && (
         <div className="flex flex-col sm:flex-row items-center gap-8 mb-10 pb-10 border-b" style={{ borderColor: "rgba(13,13,13,0.1)" }}>
           <div className="text-center flex-shrink-0">
-            <p style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "72px", fontWeight: 300, color: "#0D0D0D", lineHeight: 1 }}>
+            <p style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "clamp(48px, 12vw, 72px)", fontWeight: 300, color: "#0D0D0D", lineHeight: 1 }}>
               {avgRating.toFixed(1)}
             </p>
             <div className="flex justify-center gap-0.5 my-2">
@@ -593,15 +593,15 @@ export default function ProductDetail() {
       <main id="main-content" className="pt-24 pb-20">
         <div className="max-w-[1440px] mx-auto px-6 lg:px-10">
           {/* Breadcrumb */}
-          <nav className="flex gap-2 text-xs mb-8 pt-4" style={{ color: "#6B6560", fontFamily: "'DM Sans', sans-serif" }}>
-            <Link to="/" className="hover:text-[#C9A84C] transition-colors">Home</Link>
-            <span>/</span>
-            <Link to="/shop" className="hover:text-[#C9A84C] transition-colors">Shop</Link>
-            <span>/</span>
-            <span style={{ color: "#0D0D0D" }}>{product.name}</span>
+          <nav className="flex items-center gap-2 text-xs mb-8 pt-4 min-w-0" style={{ color: "#6B6560", fontFamily: "'DM Sans', sans-serif" }}>
+            <Link to="/" className="hover:text-[#C9A84C] transition-colors whitespace-nowrap">Home</Link>
+            <span className="flex-shrink-0">/</span>
+            <Link to="/shop" className="hover:text-[#C9A84C] transition-colors whitespace-nowrap">Shop</Link>
+            <span className="flex-shrink-0">/</span>
+            <span className="truncate min-w-0" style={{ color: "#0D0D0D" }}>{product.name}</span>
           </nav>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 xl:gap-20">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 sm:gap-12 xl:gap-20">
             {/* Images */}
             <div>
               <div
@@ -781,7 +781,7 @@ export default function ProductDetail() {
                   <p className="text-xs tracking-[0.3em] mb-2 uppercase" style={{ fontFamily: "'DM Sans', sans-serif", color: "#C9A84C" }}>You May Also Like</p>
                   <h2 style={{ fontFamily: "'Cormorant Garamond', serif", fontStyle: "italic", fontWeight: 300, fontSize: "clamp(28px, 3vw, 40px)", color: "#0D0D0D" }}>More from the Collection</h2>
                 </div>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-10">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-x-3 sm:gap-x-6 gap-y-8 sm:gap-y-10">
                   {related.map((r) => (
                     <Link key={r.slug} to={`/product/${r.slug}`} className="group block">
                       <div className="relative overflow-hidden mb-3" style={{ aspectRatio: "3/4" }}>
@@ -915,7 +915,10 @@ export default function ProductDetail() {
         className="fixed bottom-0 left-0 right-0 z-40 transition-transform duration-300"
         style={{ transform: stickyVisible ? "translateY(0)" : "translateY(100%)" }}
       >
-        <div className="max-w-[1440px] mx-auto px-6 lg:px-10 py-3 flex items-center gap-4" style={{ backgroundColor: "#0D0D0D", borderTop: "1px solid rgba(201,168,76,0.25)" }}>
+        <div
+          className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-10 pt-3 flex items-center gap-3 sm:gap-4"
+          style={{ backgroundColor: "#0D0D0D", borderTop: "1px solid rgba(201,168,76,0.25)", paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))" }}
+        >
           <div className="hidden sm:flex items-center gap-3 flex-1 min-w-0">
             <img src={product.imgs[0]} alt={product.name} className="w-12 h-14 object-cover flex-shrink-0" />
             <div className="min-w-0">

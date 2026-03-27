@@ -386,11 +386,11 @@ export default function Shop() {
           {/* Toolbar */}
           <div className="flex items-center justify-between mb-4">
             <p className="text-sm" style={{ color: "#6B6560", fontFamily: "'DM Sans', sans-serif" }}>{filtered.length} product{filtered.length !== 1 ? "s" : ""}</p>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 sm:gap-3">
               <button
                 type="button"
                 onClick={() => setFiltersOpen(!filtersOpen)}
-                className="flex items-center gap-2 border px-3 py-2 text-xs tracking-[0.1em] uppercase transition-colors"
+                className="flex items-center gap-1.5 sm:gap-2 border px-2.5 sm:px-3 py-2 text-xs tracking-[0.1em] uppercase transition-colors"
                 style={{
                   fontFamily: "'DM Sans', sans-serif", fontWeight: 500,
                   borderColor: filtersOpen ? "#0D0D0D" : "rgba(13,13,13,0.2)",
@@ -405,18 +405,18 @@ export default function Shop() {
                 <button
                   type="button"
                   onClick={() => setSortOpen((v) => !v)}
-                  className="flex items-center gap-2 border px-3 py-2 text-xs tracking-[0.1em] uppercase"
+                  className="flex items-center gap-1.5 sm:gap-2 border px-2.5 sm:px-3 py-2 text-xs tracking-[0.1em] uppercase"
                   style={{
                     borderColor: "rgba(13,13,13,0.2)",
                     fontFamily: "'DM Sans', sans-serif",
                     fontWeight: 500,
                     color: "#0D0D0D",
-                    minWidth: "210px",
                     justifyContent: "space-between",
                     backgroundColor: "#F8F5F0",
                   }}
                 >
-                  {sort}
+                  <span className="hidden sm:inline">{sort}</span>
+                  <span className="sm:hidden truncate max-w-[80px]">{sort.split(":")[0]}</span>
                   <ChevronDown
                     size={12}
                     color="#0D0D0D"
@@ -425,8 +425,8 @@ export default function Shop() {
                 </button>
                 {sortOpen && (
                   <div
-                    className="absolute right-0 mt-1 w-full border z-30"
-                    style={{
+                    className="absolute right-0 mt-1 border z-30"
+                    style={{ minWidth: "190px",
                       borderColor: "rgba(13,13,13,0.2)",
                       backgroundColor: "#F8F5F0",
                       boxShadow: "0 12px 30px rgba(13,13,13,0.12)",
@@ -533,12 +533,12 @@ export default function Shop() {
 
           {/* Grid or empty state */}
           {loading ? (
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-12">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-3 sm:gap-x-6 gap-y-8 sm:gap-y-12">
               {Array.from({ length: 8 }).map((_, i) => <ProductCardSkeleton key={i} />)}
             </div>
           ) : filtered.length > 0 ? (
             <>
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-12">
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-3 sm:gap-x-6 gap-y-8 sm:gap-y-12">
                 {filtered.slice(0, visibleCount).map((p) => <ProductCard key={p.id} p={p} onQuickView={setQuickViewProduct} categoryLabels={categoryLabels} />)}
               </div>
               {visibleCount < filtered.length && (

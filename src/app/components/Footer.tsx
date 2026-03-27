@@ -298,12 +298,12 @@ export function Footer() {
           >
             © {new Date().getFullYear()} Wearables Atelier. All rights reserved.
           </p>
-          <div className="flex flex-wrap items-center gap-3 text-xs">
-            <a href={whatsappHref} target="_blank" rel="noopener noreferrer" className="transition-colors hover:text-[#C9A84C]" style={{ fontFamily: "'DM Sans', sans-serif", color: "rgba(248,245,240,0.34)" }}>WhatsApp</a>
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-xs min-w-0">
+            <a href={whatsappHref} target="_blank" rel="noopener noreferrer" className="transition-colors hover:text-[#C9A84C] whitespace-nowrap" style={{ fontFamily: "'DM Sans', sans-serif", color: "rgba(248,245,240,0.34)" }}>WhatsApp</a>
             <span style={{ color: "rgba(248,245,240,0.14)" }}>|</span>
-            <a href={`mailto:${emailAddress}`} className="transition-colors hover:text-[#C9A84C]" style={{ fontFamily: "'DM Sans', sans-serif", color: "rgba(248,245,240,0.34)" }}>{emailAddress}</a>
+            <a href={`mailto:${emailAddress}`} className="transition-colors hover:text-[#C9A84C] break-all" style={{ fontFamily: "'DM Sans', sans-serif", color: "rgba(248,245,240,0.34)" }}>{emailAddress}</a>
             <span style={{ color: "rgba(248,245,240,0.14)" }}>|</span>
-            <a href={storefront.locationMapUrl} target="_blank" rel="noopener noreferrer" className="transition-colors hover:text-[#C9A84C]" style={{ fontFamily: "'DM Sans', sans-serif", color: "rgba(248,245,240,0.34)" }}>{storefront.locationLabel}</a>
+            <a href={storefront.locationMapUrl} target="_blank" rel="noopener noreferrer" className="transition-colors hover:text-[#C9A84C] whitespace-nowrap" style={{ fontFamily: "'DM Sans', sans-serif", color: "rgba(248,245,240,0.34)" }}>{storefront.locationLabel}</a>
           </div>
         </div>
       </div>

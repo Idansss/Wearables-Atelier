@@ -103,27 +103,27 @@ export default function Cart() {
               {/* Items */}
               <div className="lg:col-span-2">
                 {items.map((item) => (
-                  <div key={`${item.id}-${item.size}`} className="flex gap-5 py-6 border-b" style={{ borderColor: "rgba(13,13,13,0.1)" }}>
-                    <div className="w-24 h-32 flex-shrink-0 overflow-hidden">
+                  <div key={`${item.id}-${item.size}`} className="flex gap-4 py-5 border-b" style={{ borderColor: "rgba(13,13,13,0.1)" }}>
+                    <div className="w-20 h-28 sm:w-24 sm:h-32 flex-shrink-0 overflow-hidden">
                       <img src={item.img} alt={item.name} loading="lazy" className="w-full h-full object-cover" />
                     </div>
-                    <div className="flex-1 flex flex-col justify-between">
+                    <div className="flex-1 min-w-0 flex flex-col justify-between">
                       <div>
                         <p className="text-[10px] tracking-[0.2em] uppercase mb-1" style={{ color: "#6B6560" }}>{item.category}</p>
-                        <p style={{ fontFamily: "'Cormorant Garamond', serif", fontStyle: "italic", fontSize: "18px", color: "#0D0D0D" }}>{item.name}</p>
+                        <p className="truncate" style={{ fontFamily: "'Cormorant Garamond', serif", fontStyle: "italic", fontSize: "17px", color: "#0D0D0D" }}>{item.name}</p>
                         <p className="text-xs mt-1" style={{ color: "#6B6560" }}>Size: {item.size}</p>
                       </div>
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center border" style={{ borderColor: "rgba(13,13,13,0.2)" }}>
-                          <button type="button" onClick={() => updateQty(item.id, item.size, item.qty - 1)} className="w-8 h-8 flex items-center justify-center text-sm hover:bg-black/5 transition-colors">−</button>
-                          <span className="w-8 text-center text-sm" style={{ fontFamily: "'DM Sans', sans-serif" }}>{item.qty}</span>
-                          <button type="button" onClick={() => updateQty(item.id, item.size, item.qty + 1)} className="w-8 h-8 flex items-center justify-center text-sm hover:bg-black/5 transition-colors">+</button>
+                      <div className="flex items-center justify-between mt-3 gap-2">
+                        <div className="flex items-center border flex-shrink-0" style={{ borderColor: "rgba(13,13,13,0.2)" }}>
+                          <button type="button" onClick={() => updateQty(item.id, item.size, item.qty - 1)} className="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center text-sm hover:bg-black/5 transition-colors">−</button>
+                          <span className="w-7 sm:w-8 text-center text-sm" style={{ fontFamily: "'DM Sans', sans-serif" }}>{item.qty}</span>
+                          <button type="button" onClick={() => updateQty(item.id, item.size, item.qty + 1)} className="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center text-sm hover:bg-black/5 transition-colors">+</button>
                         </div>
-                        <span style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 600, fontSize: "15px", color: "#0D0D0D" }}>
+                        <span className="flex-1 text-right" style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 600, fontSize: "14px", color: "#0D0D0D" }}>
                           ₦{((item.salePrice ?? item.price) * item.qty).toLocaleString()}
                         </span>
-                        <button type="button" onClick={() => removeItem(item.id, item.size)} className="transition-colors hover:text-red-500" style={{ color: "#6B6560" }} aria-label="Remove item">
-                          <Trash2 size={16} />
+                        <button type="button" onClick={() => removeItem(item.id, item.size)} className="flex-shrink-0 transition-colors hover:text-red-500 p-1" style={{ color: "#6B6560" }} aria-label="Remove item">
+                          <Trash2 size={15} />
                         </button>
                       </div>
                     </div>

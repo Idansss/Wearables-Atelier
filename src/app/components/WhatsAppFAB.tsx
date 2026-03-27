@@ -26,7 +26,7 @@ export function WhatsAppFAB() {
   const [open, setOpen] = useState(false);
 
   return (
-    <div className="fixed bottom-20 sm:bottom-6 right-6 z-50 flex flex-col items-end gap-3">
+    <div className="fixed right-5 sm:right-6 z-50 flex flex-col items-end gap-3" style={{ bottom: "max(5rem, calc(1.5rem + env(safe-area-inset-bottom)))" }}>
       {/* Mini-menu */}
       <div
         className="flex flex-col items-end gap-2 transition-all duration-300 origin-bottom-right"
