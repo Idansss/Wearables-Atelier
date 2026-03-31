@@ -59,7 +59,7 @@ export function AdminProvider({ children }: { children: ReactNode }) {
       if (!cancelled) setLoading(false);
     }
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    void supabase.auth.getSession().then(({ data: { session } }) => {
       void applySession(session?.user ?? null);
     });
 

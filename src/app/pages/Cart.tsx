@@ -80,7 +80,7 @@ export default function Cart() {
       params.set("discount", String(discount));
       params.set("coupon", coupon.trim().toUpperCase());
     }
-    navigate(`/checkout${discount > 0 ? `?${params.toString()}` : ""}`);
+    void navigate(`/checkout${discount > 0 ? `?${params.toString()}` : ""}`);
   };
 
   return (

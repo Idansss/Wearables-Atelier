@@ -9,7 +9,7 @@ export default function AuditLog() {
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
 
   useEffect(() => {
-    getAuditLogs(200)
+    void getAuditLogs(200)
       .then(setEntries)
       .finally(() => setLoading(false));
   }, []);
@@ -17,7 +17,7 @@ export default function AuditLog() {
   function toggleExpand(id: string) {
     setExpanded((prev) => {
       const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
+      if (next.has(id)) { next.delete(id); } else { next.add(id); }
       return next;
     });
   }

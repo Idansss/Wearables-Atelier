@@ -182,7 +182,7 @@ export default function CustomOrders() {
     }
   }, []);
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => { void load(); }, [load]);
 
   const handleStatusChange = async (id: string, status: CustomOrderStatus) => {
     const prev = orders.find((o) => o.id === id);

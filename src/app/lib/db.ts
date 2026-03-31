@@ -9,6 +9,45 @@ import {
   type StorefrontSettings,
 } from "./siteSettings";
 import { supabase } from "./supabase";
+import { AppError } from "./errors";
+import { logger } from "./logger";
+
+// ─── Pagination types ─────────────────────────────────────────────────────────
+
+/**
+ * Standard cursor-based pagination options.
+ * Pass `cursor` from the previous page's `nextCursor` to fetch the next page.
+ */
+export type PaginationOptions = {
+  /** Number of records per page (default: 50, max: 200) */
+  limit?: number;
+  /** Opaque cursor from the previous response's `nextCursor` */
+  cursor?: string | null;
+};
+
+export type PaginatedResult<T> = {
+  data: T[];
+  meta: {
+    /** Total items in full result set (where available) */
+    total?: number;
+    hasNext: boolean;
+    /** Pass as `cursor` on the next request */
+    nextCursor: string | null;
+    limit: number;
+  };
+};
+
+function clampLimit(limit?: number): number {
+  const l = limit ?? 50;
+  return Math.min(Math.max(1, l), 200);
+}
+
+/** Wraps any Supabase error (or unknown) into a typed AppError */
+function handleDbError(err: unknown, context: string): never {
+  const appErr = AppError.from(err, `Database error in ${context}`);
+  logger.error(`db.${context}`, { code: appErr.code, message: appErr.message });
+  throw appErr;
+}
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -149,13 +188,13 @@ function rowToProduct(row: Record<string, unknown>): Product {
     name: String(row.name ?? ""),
     category: String(row.category ?? ""),
     price: Number(row.price ?? 0),
-    salePrice: row.sale_price != null ? Number(row.sale_price) : undefined,
+    salePrice: row.sale_price !== null && row.sale_price !== undefined ? Number(row.sale_price) : undefined,
     description: String(row.description ?? ""),
     sizes: (row.sizes as string[]) ?? [],
     details: (row.details as string[]) ?? [],
     images: (row.images as string[]) ?? [],
-    badge: row.badge != null ? String(row.badge) : undefined,
-    badgeColor: row.badge_color != null ? String(row.badge_color) : undefined,
+    badge: row.badge !== null && row.badge !== undefined ? String(row.badge) : undefined,
+    badgeColor: row.badge_color !== null && row.badge_color !== undefined ? String(row.badge_color) : undefined,
     inStock: Boolean(row.in_stock),
     featured: Boolean(row.featured),
     createdAt: parseDate(row.created_at as string),
@@ -193,7 +232,7 @@ export async function saveProduct(data: ProductInput): Promise<string> {
     },
     { onConflict: "slug" }
   );
-  if (error) throw error;
+  if (error) handleDbError(error, "saveProduct");
   return data.slug;
 }
 
@@ -206,23 +245,70 @@ export async function updateProduct(slug: string, data: Partial<ProductInput>): 
     .from("products")
     .update({ ...cleaned, updated_at: new Date().toISOString() })
     .eq("slug", slug);
-  if (error) throw error;
+  if (error) handleDbError(error, "updateProduct");
 }
 
 export async function deleteProduct(slug: string): Promise<void> {
   const { error } = await supabase.from("products").delete().eq("slug", slug);
-  if (error) throw error;
+  if (error) handleDbError(error, "deleteProduct");
 }
 
+/**
+ * Returns all products — suitable for the admin product list (expected < 1000 rows).
+ * For the public storefront use `getProductsPaginated` to avoid unbounded queries.
+ */
 export async function getProducts(): Promise<Product[]> {
-  const { data, error } = await supabase.from("products").select("*").order("created_at", { ascending: false });
-  if (error) throw error;
+  const { data, error } = await supabase
+    .from("products")
+    .select("*")
+    .order("created_at", { ascending: false })
+    .limit(500); // safety cap
+  if (error) handleDbError(error, "getProducts");
   return (data ?? []).map((row) => rowToProduct(row as Record<string, unknown>));
+}
+
+/**
+ * Paginated product list for the public storefront.
+ * Supports cursor-based navigation and optional category filtering.
+ */
+export async function getProductsPaginated(
+  opts: PaginationOptions & { category?: string; featured?: boolean; inStock?: boolean } = {}
+): Promise<PaginatedResult<Product>> {
+  const limit = clampLimit(opts.limit);
+
+  let query = supabase
+    .from("products")
+    .select("*", { count: "exact" })
+    .order("created_at", { ascending: false })
+    .limit(limit + 1); // fetch one extra to detect hasNext
+
+  if (opts.cursor) query = query.lt("created_at", opts.cursor);
+  if (opts.category) query = query.eq("category", opts.category);
+  if (opts.featured !== undefined) query = query.eq("featured", opts.featured);
+  if (opts.inStock !== undefined) query = query.eq("in_stock", opts.inStock);
+
+  const { data, error, count } = await query;
+  if (error) handleDbError(error, "getProductsPaginated");
+
+  const rows = data ?? [];
+  const hasNext = rows.length > limit;
+  const items = hasNext ? rows.slice(0, -1) : rows;
+  const products = items.map((row) => rowToProduct(row as Record<string, unknown>));
+
+  return {
+    data: products,
+    meta: {
+      total: count ?? undefined,
+      hasNext,
+      nextCursor: hasNext ? (items[items.length - 1] as Record<string, unknown>).created_at as string : null,
+      limit,
+    },
+  };
 }
 
 export async function getProduct(slug: string): Promise<Product | null> {
   const { data, error } = await supabase.from("products").select("*").eq("slug", slug).maybeSingle();
-  if (error) throw error;
+  if (error) handleDbError(error, "getProduct");
   if (!data) return null;
   return rowToProduct(data as Record<string, unknown>);
 }
@@ -254,7 +340,8 @@ export async function saveOrder(
     created_at: now,
     updated_at: now,
   });
-  if (error) throw error;
+  if (error) handleDbError(error, "saveOrder");
+  logger.info("order.created", { id, ref: data.ref });
   return id;
 }
 
@@ -266,27 +353,83 @@ function rowToOrder(row: Record<string, unknown>): Order {
     items: row.items as OrderItem[],
     subtotal: Number(row.subtotal),
     discountAmount: Number(row.discount_amount ?? 0),
-    couponCode: row.coupon_code != null ? String(row.coupon_code) : undefined,
+    couponCode: row.coupon_code !== null && row.coupon_code !== undefined ? String(row.coupon_code) : undefined,
     total: Number(row.total),
     status: row.status as Order["status"],
     paymentStatus: row.payment_status as Order["paymentStatus"],
     paystackRef: String(row.paystack_ref ?? ""),
-    notes: row.notes != null ? String(row.notes) : undefined,
-    trackingCode: row.tracking_code != null ? String(row.tracking_code) : undefined,
+    notes: row.notes !== null && row.notes !== undefined ? String(row.notes) : undefined,
+    trackingCode: row.tracking_code !== null && row.tracking_code !== undefined ? String(row.tracking_code) : undefined,
     createdAt: parseDate(row.created_at as string),
     updatedAt: parseDate(row.updated_at as string),
   };
 }
 
+/**
+ * Returns all orders for the admin panel (capped at 1000 for safety).
+ * Use `getOrdersPaginated` for large datasets.
+ */
 export async function getOrders(): Promise<Order[]> {
-  const { data, error } = await supabase.from("orders").select("*").order("created_at", { ascending: false });
-  if (error) throw error;
+  const { data, error } = await supabase
+    .from("orders")
+    .select("*")
+    .order("created_at", { ascending: false })
+    .limit(1000);
+  if (error) handleDbError(error, "getOrders");
   return (data ?? []).map((row) => rowToOrder(row as Record<string, unknown>));
+}
+
+/**
+ * Paginated order list with optional status filter and search.
+ */
+export async function getOrdersPaginated(
+  opts: PaginationOptions & { status?: Order["status"]; search?: string } = {}
+): Promise<PaginatedResult<Order>> {
+  const limit = clampLimit(opts.limit);
+
+  let query = supabase
+    .from("orders")
+    .select("*", { count: "exact" })
+    .order("created_at", { ascending: false })
+    .limit(limit + 1);
+
+  if (opts.cursor) query = query.lt("created_at", opts.cursor);
+  if (opts.status) query = query.eq("status", opts.status);
+
+  const { data, error, count } = await query;
+  if (error) handleDbError(error, "getOrdersPaginated");
+
+  const rows = data ?? [];
+  const hasNext = rows.length > limit;
+  const items = hasNext ? rows.slice(0, -1) : rows;
+  const orders = items.map((row) => rowToOrder(row as Record<string, unknown>));
+
+  // Client-side search filter (Supabase free tier doesn't include full-text on jsonb)
+  const filtered = opts.search
+    ? orders.filter((o) => {
+        const q = opts.search!.toLowerCase();
+        return (
+          o.ref.toLowerCase().includes(q) ||
+          o.customer.email.toLowerCase().includes(q) ||
+          `${o.customer.firstName} ${o.customer.lastName}`.toLowerCase().includes(q)
+        );
+      })
+    : orders;
+
+  return {
+    data: filtered,
+    meta: {
+      total: count ?? undefined,
+      hasNext,
+      nextCursor: hasNext ? (items[items.length - 1] as Record<string, unknown>).created_at as string : null,
+      limit,
+    },
+  };
 }
 
 export async function getOrder(id: string): Promise<Order | null> {
   const { data, error } = await supabase.from("orders").select("*").eq("id", id).maybeSingle();
-  if (error) throw error;
+  if (error) handleDbError(error, "getOrder");
   if (!data) return null;
   return rowToOrder(data as Record<string, unknown>);
 }
@@ -303,7 +446,8 @@ export async function updateOrderStatus(
   if (extra?.notes !== undefined) updates.notes = extra.notes;
   if (extra?.trackingCode !== undefined) updates.tracking_code = extra.trackingCode;
   const { error } = await supabase.from("orders").update(updates).eq("id", id);
-  if (error) throw error;
+  if (error) handleDbError(error, "updateOrderStatus");
+  logger.info("order.status_updated", { orderId: id, newStatus: status });
 }
 
 // ─── Custom Orders ────────────────────────────────────────────────────────────
@@ -333,7 +477,8 @@ export async function saveCustomOrder(
     created_at: now,
     updated_at: now,
   });
-  if (error) throw error;
+  if (error) handleDbError(error, "saveCustomOrder");
+  logger.info("custom_order.created", { id, email: data.email });
   return id;
 }
 
@@ -351,7 +496,7 @@ function rowToCustomOrder(row: Record<string, unknown>): CustomOrder {
     inspiration: String(row.inspiration ?? ""),
     notes: String(row.notes ?? ""),
     status: row.status as CustomOrder["status"],
-    adminNotes: row.admin_notes != null ? String(row.admin_notes) : undefined,
+    adminNotes: row.admin_notes !== null && row.admin_notes !== undefined ? String(row.admin_notes) : undefined,
     createdAt: parseDate(row.created_at as string),
     updatedAt: parseDate(row.updated_at as string),
   };
@@ -361,9 +506,42 @@ export async function getCustomOrders(): Promise<CustomOrder[]> {
   const { data, error } = await supabase
     .from("custom_orders")
     .select("*")
-    .order("created_at", { ascending: false });
-  if (error) throw error;
+    .order("created_at", { ascending: false })
+    .limit(500);
+  if (error) handleDbError(error, "getCustomOrders");
   return (data ?? []).map((row) => rowToCustomOrder(row as Record<string, unknown>));
+}
+
+export async function getCustomOrdersPaginated(
+  opts: PaginationOptions & { status?: CustomOrder["status"] } = {}
+): Promise<PaginatedResult<CustomOrder>> {
+  const limit = clampLimit(opts.limit);
+
+  let query = supabase
+    .from("custom_orders")
+    .select("*", { count: "exact" })
+    .order("created_at", { ascending: false })
+    .limit(limit + 1);
+
+  if (opts.cursor) query = query.lt("created_at", opts.cursor);
+  if (opts.status) query = query.eq("status", opts.status);
+
+  const { data, error, count } = await query;
+  if (error) handleDbError(error, "getCustomOrdersPaginated");
+
+  const rows = data ?? [];
+  const hasNext = rows.length > limit;
+  const items = hasNext ? rows.slice(0, -1) : rows;
+
+  return {
+    data: items.map((row) => rowToCustomOrder(row as Record<string, unknown>)),
+    meta: {
+      total: count ?? undefined,
+      hasNext,
+      nextCursor: hasNext ? (items[items.length - 1] as Record<string, unknown>).created_at as string : null,
+      limit,
+    },
+  };
 }
 
 export async function updateCustomOrderStatus(
@@ -377,7 +555,7 @@ export async function updateCustomOrderStatus(
   };
   if (adminNotes !== undefined) updates.admin_notes = adminNotes;
   const { error } = await supabase.from("custom_orders").update(updates).eq("id", id);
-  if (error) throw error;
+  if (error) handleDbError(error, "updateCustomOrderStatus");
 }
 
 // ─── Newsletter Subscribers ───────────────────────────────────────────────────
@@ -387,10 +565,11 @@ export async function saveSubscriber(
   source: "footer" | "popup"
 ): Promise<string | null> {
   const { data, error } = await supabase.rpc("subscribe_newsletter", {
-    p_email: email.trim(),
+    p_email: email.trim().toLowerCase(),
     p_source: source,
   });
-  if (error) throw error;
+  if (error) handleDbError(error, "saveSubscriber");
+  logger.info("newsletter.subscribed", { source });
   return data ?? null;
 }
 
@@ -408,14 +587,15 @@ export async function getSubscribers(): Promise<NewsletterSubscriber[]> {
   const { data, error } = await supabase
     .from("newsletter_subscribers")
     .select("*")
-    .order("subscribed_at", { ascending: false });
-  if (error) throw error;
+    .order("subscribed_at", { ascending: false })
+    .limit(2000);
+  if (error) handleDbError(error, "getSubscribers");
   return (data ?? []).map((row) => rowToSubscriber(row as Record<string, unknown>));
 }
 
 export async function removeSubscriber(id: string): Promise<void> {
   const { error } = await supabase.from("newsletter_subscribers").update({ status: "unsubscribed" }).eq("id", id);
-  if (error) throw error;
+  if (error) handleDbError(error, "removeSubscriber");
 }
 
 // ─── Contact Messages ─────────────────────────────────────────────────────────
@@ -436,7 +616,8 @@ export async function saveContactMessage(data: {
     status: "unread",
     created_at: new Date().toISOString(),
   });
-  if (error) throw error;
+  if (error) handleDbError(error, "saveContactMessage");
+  logger.info("contact_message.received", { id });
   return id;
 }
 
@@ -456,8 +637,9 @@ export async function getContactMessages(): Promise<ContactMessage[]> {
   const { data, error } = await supabase
     .from("contact_messages")
     .select("*")
-    .order("created_at", { ascending: false });
-  if (error) throw error;
+    .order("created_at", { ascending: false })
+    .limit(500);
+  if (error) handleDbError(error, "getContactMessages");
   return (data ?? []).map((row) => rowToContact(row as Record<string, unknown>));
 }
 
@@ -466,7 +648,7 @@ export async function updateContactStatus(
   status: ContactMessage["status"]
 ): Promise<void> {
   const { error } = await supabase.from("contact_messages").update({ status }).eq("id", id);
-  if (error) throw error;
+  if (error) handleDbError(error, "updateContactStatus");
 }
 
 // ─── Wholesale Leads ──────────────────────────────────────────────────────────
@@ -490,7 +672,8 @@ export async function saveWholesaleLead(
     status: "new",
     created_at: new Date().toISOString(),
   });
-  if (error) throw error;
+  if (error) handleDbError(error, "saveWholesaleLead");
+  logger.info("wholesale_lead.created", { id });
   return id;
 }
 
@@ -513,8 +696,9 @@ export async function getWholesaleLeads(): Promise<WholesaleLead[]> {
   const { data, error } = await supabase
     .from("wholesale_leads")
     .select("*")
-    .order("created_at", { ascending: false });
-  if (error) throw error;
+    .order("created_at", { ascending: false })
+    .limit(500);
+  if (error) handleDbError(error, "getWholesaleLeads");
   return (data ?? []).map((row) => rowToWholesale(row as Record<string, unknown>));
 }
 
@@ -523,7 +707,7 @@ export async function updateWholesaleStatus(
   status: WholesaleLead["status"]
 ): Promise<void> {
   const { error } = await supabase.from("wholesale_leads").update({ status }).eq("id", id);
-  if (error) throw error;
+  if (error) handleDbError(error, "updateWholesaleStatus");
 }
 
 // ─── Admin Helpers ────────────────────────────────────────────────────────────
@@ -531,7 +715,7 @@ export async function updateWholesaleStatus(
 export async function checkIsAdmin(_uid: string, _email?: string | null): Promise<boolean> {
   const { data, error } = await supabase.rpc("is_admin");
   if (error) {
-    console.error("[db] is_admin", error);
+    logger.error("db.is_admin.failed", { error });
     return false;
   }
   return Boolean(data);
@@ -539,7 +723,7 @@ export async function checkIsAdmin(_uid: string, _email?: string | null): Promis
 
 export async function getAdminUsers(): Promise<AdminUser[]> {
   const { data, error } = await supabase.from("admins").select("*").order("created_at", { ascending: false });
-  if (error) throw error;
+  if (error) handleDbError(error, "getAdminUsers");
   return (data ?? [])
     .map((row) => {
       const r = row as Record<string, unknown>;
@@ -578,7 +762,7 @@ export async function saveAdminUser(data: AdminUserInput): Promise<string> {
     },
     { onConflict: "email" }
   );
-  if (error) throw error;
+  if (error) handleDbError(error, "saveAdminUser");
   return normalizedEmail;
 }
 
@@ -590,12 +774,12 @@ export async function updateAdminUser(id: string, data: Partial<AdminUserInput>)
   if (data.role !== undefined) updates.role = data.role;
   if (data.isActive !== undefined) updates.is_active = data.isActive;
   const { error } = await supabase.from("admins").update(updates).eq("email", id.toLowerCase());
-  if (error) throw error;
+  if (error) handleDbError(error, "updateAdminUser");
 }
 
 export async function deleteAdminUser(id: string): Promise<void> {
   const { error } = await supabase.from("admins").delete().eq("email", id.toLowerCase());
-  if (error) throw error;
+  if (error) handleDbError(error, "deleteAdminUser");
 }
 
 export async function logAdminAction(
@@ -611,7 +795,8 @@ export async function logAdminAction(
     details: details ?? {},
     timestamp: new Date().toISOString(),
   });
-  if (error) throw error;
+  // Audit log failures should not block the main operation — log but don't throw
+  if (error) logger.error("audit_log.write_failed", { action, uid });
 }
 
 // ─── Coupons ──────────────────────────────────────────────────────────────────
@@ -635,10 +820,10 @@ function rowToCoupon(row: Record<string, unknown>): Coupon {
     id: String(row.id),
     code: String(row.code),
     discount: Number(row.discount),
-    description: row.description != null ? String(row.description) : undefined,
-    maxUses: row.max_uses != null ? Number(row.max_uses) : undefined,
+    description: row.description !== null && row.description !== undefined ? String(row.description) : undefined,
+    maxUses: row.max_uses !== null && row.max_uses !== undefined ? Number(row.max_uses) : undefined,
     usedCount: Number(row.used_count ?? 0),
-    expiresAt: row.expires_at != null ? parseDate(row.expires_at as string) : undefined,
+    expiresAt: row.expires_at !== null && row.expires_at !== undefined ? parseDate(row.expires_at as string) : undefined,
     active: Boolean(row.active),
     createdAt: parseDate(row.created_at as string),
   };
@@ -659,13 +844,17 @@ export async function saveCoupon(data: CouponInput): Promise<string> {
     })
     .select("id")
     .single();
-  if (error) throw error;
-  return inserted.id as string;
+  if (error) handleDbError(error, "saveCoupon");
+  return inserted!.id as string;
 }
 
 export async function getCoupons(): Promise<Coupon[]> {
-  const { data, error } = await supabase.from("coupons").select("*").order("created_at", { ascending: false });
-  if (error) throw error;
+  const { data, error } = await supabase
+    .from("coupons")
+    .select("*")
+    .order("created_at", { ascending: false })
+    .limit(200);
+  if (error) handleDbError(error, "getCoupons");
   return (data ?? []).map((row) => rowToCoupon(row as Record<string, unknown>));
 }
 
@@ -678,12 +867,12 @@ export async function updateCoupon(id: string, data: Partial<CouponInput>): Prom
   if (data.expiresAt !== undefined) updates.expires_at = data.expiresAt ? data.expiresAt.toISOString() : null;
   if (data.active !== undefined) updates.active = data.active;
   const { error } = await supabase.from("coupons").update(updates).eq("id", id);
-  if (error) throw error;
+  if (error) handleDbError(error, "updateCoupon");
 }
 
 export async function deleteCoupon(id: string): Promise<void> {
   const { error } = await supabase.from("coupons").delete().eq("id", id);
-  if (error) throw error;
+  if (error) handleDbError(error, "deleteCoupon");
 }
 
 export async function validateCoupon(code: string): Promise<Coupon | null> {
@@ -694,7 +883,7 @@ export async function validateCoupon(code: string): Promise<Coupon | null> {
     .eq("code", upper)
     .eq("active", true)
     .maybeSingle();
-  if (error) throw error;
+  if (error) handleDbError(error, "validateCoupon");
   if (!data) return null;
   const coupon = rowToCoupon(data as Record<string, unknown>);
   if (coupon.expiresAt && coupon.expiresAt < new Date()) return null;
@@ -704,7 +893,7 @@ export async function validateCoupon(code: string): Promise<Coupon | null> {
 
 export async function incrementCouponUse(id: string): Promise<void> {
   const { error } = await supabase.rpc("increment_coupon_use", { p_id: id });
-  if (error) throw error;
+  if (error) handleDbError(error, "incrementCouponUse");
 }
 
 // ─── Site Settings ────────────────────────────────────────────────────────────
@@ -719,7 +908,7 @@ export type SiteSettings = {
 
 export async function getSiteSettings(): Promise<SiteSettings> {
   const { data, error } = await supabase.from("site_settings").select("*").eq("id", "site").maybeSingle();
-  if (error) throw error;
+  if (error) handleDbError(error, "getSiteSettings");
   if (!data) {
     return {
       announcementMessages: [],
@@ -735,7 +924,7 @@ export async function getSiteSettings(): Promise<SiteSettings> {
     collections: normalizeCollections(row.collections),
     storefront,
     simplePages: normalizeSimplePages(row.simple_pages, storefront.contactEmail),
-    updatedAt: row.updated_at != null ? parseDate(row.updated_at as string) : undefined,
+    updatedAt: row.updated_at !== null && row.updated_at !== undefined ? parseDate(row.updated_at as string) : undefined,
   };
 }
 
@@ -760,7 +949,8 @@ export async function saveSiteSettings(
     },
     { onConflict: "id" }
   );
-  if (error) throw error;
+  if (error) handleDbError(error, "saveSiteSettings");
+  logger.info("site_settings.saved");
 }
 
 // ─── Audit Log Reader ─────────────────────────────────────────────────────────
@@ -775,12 +965,13 @@ export type AuditEntry = {
 };
 
 export async function getAuditLogs(limitCount = 100): Promise<AuditEntry[]> {
+  const limit = Math.min(limitCount, 500); // hard cap
   const { data, error } = await supabase
     .from("audit_logs")
     .select("*")
     .order("timestamp", { ascending: false })
-    .limit(limitCount);
-  if (error) throw error;
+    .limit(limit);
+  if (error) handleDbError(error, "getAuditLogs");
   return (data ?? []).map((row) => {
     const r = row as Record<string, unknown>;
     return {
@@ -848,8 +1039,9 @@ export async function getProductReviews(slug: string): Promise<ProductReview[]> 
     .select("*")
     .eq("product_slug", slug)
     .eq("status", "approved")
-    .order("created_at", { ascending: false });
-  if (error) throw error;
+    .order("created_at", { ascending: false })
+    .limit(100);
+  if (error) handleDbError(error, "getProductReviews");
   return (data ?? []).map((row) => {
     const r = row as Record<string, unknown>;
     return {
@@ -869,8 +1061,9 @@ export async function getAllReviews(): Promise<ProductReview[]> {
   const { data, error } = await supabase
     .from("reviews")
     .select("*")
-    .order("created_at", { ascending: false });
-  if (error) throw error;
+    .order("created_at", { ascending: false })
+    .limit(500);
+  if (error) handleDbError(error, "getAllReviews");
   return (data ?? []).map((row) => {
     const r = row as Record<string, unknown>;
     return {
@@ -891,12 +1084,12 @@ export async function updateReviewStatus(
   status: ProductReview["status"]
 ): Promise<void> {
   const { error } = await supabase.from("reviews").update({ status }).eq("id", id);
-  if (error) throw error;
+  if (error) handleDbError(error, "updateReviewStatus");
 }
 
 export async function deleteReview(id: string): Promise<void> {
   const { error } = await supabase.from("reviews").delete().eq("id", id);
-  if (error) throw error;
+  if (error) handleDbError(error, "deleteReview");
 }
 
 export async function saveProductReview(review: {
@@ -910,11 +1103,12 @@ export async function saveProductReview(review: {
     product_slug: review.productSlug,
     name: review.name.trim(),
     location: review.location.trim(),
-    rating: review.rating,
+    rating: Math.min(5, Math.max(1, Math.round(review.rating))),
     body: review.body.trim(),
     status: "pending",
   });
-  if (error) throw error;
+  if (error) handleDbError(error, "saveProductReview");
+  logger.info("review.submitted", { productSlug: review.productSlug });
 }
 
 // ─── Flyers ───────────────────────────────────────────────────────────────────
@@ -943,8 +1137,9 @@ export async function getFlyers(): Promise<Flyer[]> {
   const { data, error } = await supabase
     .from("flyers")
     .select("*")
-    .order("created_at", { ascending: false });
-  if (error) throw error;
+    .order("created_at", { ascending: false })
+    .limit(50);
+  if (error) handleDbError(error, "getFlyers");
   return (data ?? []).map((r) => rowToFlyer(r as Record<string, unknown>));
 }
 
@@ -956,7 +1151,7 @@ export async function getActiveFlyer(): Promise<Flyer | null> {
     .order("created_at", { ascending: false })
     .limit(1)
     .maybeSingle();
-  if (error) throw error;
+  if (error) handleDbError(error, "getActiveFlyer");
   if (!data) return null;
   return rowToFlyer(data as Record<string, unknown>);
 }
@@ -977,24 +1172,24 @@ export async function saveFlyer(input: {
     })
     .select("id")
     .single();
-  if (error) throw error;
+  if (error) handleDbError(error, "saveFlyer");
   return String((data as Record<string, unknown>).id);
 }
 
 export async function setFlyerActive(id: string, isActive: boolean): Promise<void> {
   if (isActive) {
-    // Deactivate all others first
+    // Deactivate all others first (only one active flyer at a time)
     const { error: deactivateErr } = await supabase
       .from("flyers")
       .update({ is_active: false })
       .neq("id", id);
-    if (deactivateErr) throw deactivateErr;
+    if (deactivateErr) handleDbError(deactivateErr, "setFlyerActive.deactivate");
   }
   const { error } = await supabase.from("flyers").update({ is_active: isActive }).eq("id", id);
-  if (error) throw error;
+  if (error) handleDbError(error, "setFlyerActive");
 }
 
 export async function deleteFlyer(id: string): Promise<void> {
   const { error } = await supabase.from("flyers").delete().eq("id", id);
-  if (error) throw error;
+  if (error) handleDbError(error, "deleteFlyer");
 }

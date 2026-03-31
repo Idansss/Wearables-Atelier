@@ -83,7 +83,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   // Track auth state and reload cart when user changes
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    void supabase.auth.getSession().then(({ data: { session } }) => {
       const newUid = session?.user?.id ?? null;
       setUid(newUid);
       try {

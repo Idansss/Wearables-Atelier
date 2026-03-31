@@ -100,7 +100,7 @@ export default function Account() {
   }, [tab]);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    void supabase.auth.getSession().then(({ data: { session } }) => {
       const user = session?.user ?? null;
       setCurrentUser(user);
       setAuthLoading(false);
@@ -182,7 +182,7 @@ export default function Account() {
       await supabase.auth.signOut();
       clearCart();
       clearWishlist();
-      navigate("/account");
+      void navigate("/account");
     } catch {
       setError("Could not sign out. Please try again.");
     } finally {

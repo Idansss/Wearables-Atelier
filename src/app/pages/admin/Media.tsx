@@ -88,7 +88,7 @@ export default function Media() {
   }
 
   function handleCopy(url: string) {
-    navigator.clipboard.writeText(url).then(() => {
+    void navigator.clipboard.writeText(url).then(() => {
       setCopied(url);
       setTimeout(() => setCopied(null), 1800);
     });

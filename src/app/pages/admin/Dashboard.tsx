@@ -100,7 +100,7 @@ export default function Dashboard() {
         setLoading(false);
       }
     }
-    load();
+    void load();
   }, []);
 
   const now = new Date();

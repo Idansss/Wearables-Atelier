@@ -12,7 +12,7 @@ export default function Customers() {
   const [search, setSearch] = useState("");
 
   useEffect(() => {
-    getCustomers()
+    void getCustomers()
       .then(setCustomers)
       .finally(() => setLoading(false));
   }, []);

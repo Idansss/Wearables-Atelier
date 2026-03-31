@@ -132,7 +132,7 @@ export default function Orders() {
   }, []);
 
   useEffect(() => {
-    loadOrders();
+    void loadOrders();
   }, [loadOrders]);
 
   const handleStatusChange = async (orderId: string, newStatus: OrderStatus) => {

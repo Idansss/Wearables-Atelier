@@ -386,7 +386,7 @@ export function normalizeCollections(value: unknown): SiteCollection[] {
             : fallback?.homeBadge,
       } satisfies SiteCollection;
     })
-    .filter((entry): entry is SiteCollection => entry !== null);
+    .filter((entry): entry is NonNullable<typeof entry> => entry !== null) as SiteCollection[];
 
   return collections.length > 0 ? collections : DEFAULT_COLLECTIONS;
 }

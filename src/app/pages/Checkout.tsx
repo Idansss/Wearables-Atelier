@@ -112,7 +112,7 @@ export default function Checkout() {
   // Redirect to cart if empty
   useEffect(() => {
     if (items.length === 0) {
-      navigate("/cart");
+      void navigate("/cart");
     }
   }, [items, navigate]);
 
@@ -200,7 +200,7 @@ export default function Checkout() {
           name:  `${data.firstName} ${data.lastName}`,
           total: String(total),
         });
-        navigate(`/order-confirmed?${params.toString()}`);
+        void navigate(`/order-confirmed?${params.toString()}`);
       },
       onClose: () => {
         setPaying(false);

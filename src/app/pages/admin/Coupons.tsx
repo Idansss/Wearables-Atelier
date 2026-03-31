@@ -323,7 +323,7 @@ export default function Coupons() {
     }
   }
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => { void load(); }, []);
 
   function openAdd() { setEditing(null); setPanelOpen(true); }
   function openEdit(c: Coupon) { setEditing(c); setPanelOpen(true); }
@@ -580,7 +580,7 @@ export default function Coupons() {
           coupon={editing}
           onClose={closePanel}
           onSaved={load}
-          adminUser={user}
+          adminUser={user ? { id: user.id, email: user.email ?? null } : null}
         />
       )}
 

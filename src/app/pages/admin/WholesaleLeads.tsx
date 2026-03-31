@@ -72,7 +72,7 @@ export default function WholesaleLeads() {
     }
   }, []);
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => { void load(); }, [load]);
 
   const handleStatusChange = async (id: string, status: LeadStatus) => {
     const prev = leads.find((l) => l.id === id);

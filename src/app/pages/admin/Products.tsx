@@ -355,7 +355,7 @@ export default function AdminProducts() {
     }
   }
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => { void load(); }, []);
 
   async function handleToggle(product: Product, field: "inStock" | "featured") {
     setToggling(product.id + field);
@@ -541,7 +541,7 @@ export default function AdminProducts() {
           product={modalProduct === "new" ? null : modalProduct}
           onClose={() => setModalProduct(null)}
           onSaved={load}
-          adminUser={user}
+          adminUser={user ? { id: user.id, email: user.email ?? null } : null}
         />
       )}
 

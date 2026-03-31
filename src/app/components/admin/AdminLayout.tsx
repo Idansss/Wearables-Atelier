@@ -26,11 +26,12 @@ import {
   Star,
   Megaphone,
 } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 
 type NavItem = {
   label: string;
   to: string;
-  icon: React.ComponentType<{ size?: number; style?: React.CSSProperties }>;
+  icon: LucideIcon;
   minRole?: AdminRole;
 };
 
@@ -122,7 +123,7 @@ function SidebarContent({ onClose }: { onClose?: () => void }) {
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
-    navigate("/account");
+    void navigate("/account");
   };
 
   const initials = user?.email

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Mail, MapPin, Phone } from "lucide-react";
+import { Mail, MapPin } from "lucide-react";
 import { Link } from "react-router";
 import { sendNewsletterSignup } from "../lib/email";
 import { saveSubscriber } from "../lib/db";

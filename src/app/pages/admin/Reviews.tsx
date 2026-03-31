@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
-import { Search, Check, Trash2, Eye, EyeOff } from "lucide-react";
+import { Search, Check, Trash2, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 import {
   getAllReviews,
@@ -50,7 +50,7 @@ export default function Reviews() {
     }
   }, []);
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => { void load(); }, [load]);
 
   const handleApprove = async (review: ProductReview) => {
     setActionId(review.id);

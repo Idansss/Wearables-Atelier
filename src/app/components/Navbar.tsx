@@ -76,7 +76,7 @@ export function Navbar() {
   }, [location.pathname]);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    void supabase.auth.getSession().then(({ data: { session } }) => {
       setCurrentUser(session?.user ?? null);
     });
     const {
@@ -88,7 +88,7 @@ export function Navbar() {
   }, []);
 
   const collectionLinks = settings.collections.filter((collection) => collection.showInNavbar);
-  const navLinks = [
+  const navLinks: Array<{ label: string; href: string; isRed?: boolean }> = [
     ...collectionLinks
       .filter((collection) => collection.navAccent !== "sale")
       .map((collection) => ({
@@ -121,7 +121,7 @@ export function Navbar() {
     e.preventDefault();
     const q = query.trim();
     if (!q) return;
-    navigate(`/shop?q=${encodeURIComponent(q)}`);
+    void navigate(`/shop?q=${encodeURIComponent(q)}`);
     closeSearch();
   }
 

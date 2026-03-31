@@ -197,6 +197,9 @@ const fallbackProduct = {
   name: "Wearables Atelier Piece",
   category: "Ready to Wear",
   price: 95000,
+  salePrice: undefined as number | undefined,
+  badge: undefined as string | undefined,
+  badgeColor: undefined as string | undefined,
   description: "An exquisite piece from the Wearables Atelier collection, handcrafted in Lagos using the finest Nigerian fabrics.",
   sizes: ["XS", "S", "M", "L", "XL", "XXL", "Custom"],
   details: ["Premium Nigerian fabric", "Handcrafted in Lagos", "Custom sizing available", "Ships worldwide"],
@@ -474,16 +477,16 @@ export default function ProductDetail() {
   const { settings } = useSiteSettings();
   const hardcoded = (slug && productData[slug]) || null;
   const [firestoreProduct, setFirestoreProduct] = useState<ReturnType<typeof toDetailProduct> | null>(null);
-  const [related, setRelated] = useState(relatedPool.filter((p) => p.slug !== slug).slice(0, 4));
+  const [related, setRelated] = useState<Array<{ slug: string; name: string; category: string; price: number; salePrice?: number; badge?: string; badgeColor?: string; img: string }>>(relatedPool.filter((p) => p.slug !== slug).slice(0, 4));
   const [loadingProduct, setLoadingProduct] = useState(true);
 
   useEffect(() => {
     if (!slug) { setLoadingProduct(false); return; }
-    getProduct(slug).then((p) => {
+    void getProduct(slug).then((p) => {
       if (p) setFirestoreProduct(toDetailProduct(p));
     }).finally(() => setLoadingProduct(false));
     // Load related from Firestore
-    getProducts().then((all) => {
+    void getProducts().then((all) => {
       const others = all.filter((p) => p.slug !== slug && p.inStock !== false);
       if (others.length > 0) {
         setRelated(others.slice(0, 4).map((p) => ({ slug: p.slug, name: p.name, category: p.category, price: p.price, salePrice: p.salePrice, badge: p.badge, badgeColor: p.badgeColor ?? "", img: p.images[0] ?? "" })));
@@ -557,7 +560,7 @@ export default function ProductDetail() {
   }, []);
 
   function handleShare() {
-    navigator.clipboard.writeText(window.location.href).then(() => {
+    void navigator.clipboard.writeText(window.location.href).then(() => {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     });
