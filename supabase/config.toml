@@ -2,16 +2,16 @@ project_id = "bnjorikwjrlirqvxkcxm"
 
 [auth]
 enabled = true
-site_url = "https://wearablesatelier.com"
+site_url = "https://wearables-atelier.vercel.app"
 additional_redirect_urls = [
   "http://localhost:5173",
   "http://localhost:5173/account",
   "http://localhost:4173",
   "http://localhost:4173/account",
+  "https://wearables-atelier.vercel.app",
+  "https://wearables-atelier.vercel.app/account",
   "https://wearablesatelier.com",
   "https://wearablesatelier.com/account",
-  "https://www.wearablesatelier.com",
-  "https://www.wearablesatelier.com/account",
 ]
 jwt_expiry = 3600
 enable_refresh_token_rotation = true
